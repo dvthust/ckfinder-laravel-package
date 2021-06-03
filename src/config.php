@@ -22,6 +22,8 @@
 
 $config = array();
 
+$config['loadRoutes'] = true;
+
 $config['authentication'] = '\CKSource\CKFinderBridge\CKFinderMiddleware';
 
 /*============================ License Key ============================================*/
@@ -80,7 +82,7 @@ $config['backends']['laravel_logs'] = array(
 $config['backends']['default'] = array(
     'name'         => 'default',
     'adapter'      => 'local',
-    'baseUrl'      => env('APP_URL').'/userfiles/',
+    'baseUrl'      => config('app.url').'/userfiles/',
     'root'         => public_path('/userfiles/'),
     'chmodFiles'   => 0777,
     'chmodFolders' => 0755,

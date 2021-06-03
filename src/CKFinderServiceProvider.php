@@ -14,19 +14,29 @@ class CKFinderServiceProvider extends ServiceProvider
      */
     public function boot()
     {
+        if (config('ckfinder.loadRoutes')) {
+            $this->loadRoutesFrom(__DIR__.'/routes.php');
+        }
+        $this->loadViewsFrom(__DIR__.'/../views', 'ckfinder');
+
         if ($this->app->runningInConsole()) {
             $this->commands([CKFinderDownloadCommand::class]);
 
             $this->publishes([
-                __DIR__.'/config.php' => config_path('ckfinder.php'),
+                __DIR__.'/config.php' => config_path('ckfinder.php')
+            ], ['ckfinder-config']);
+
+            $this->publishes([
                 __DIR__.'/../public' => public_path('js')
-            ], 'ckfinder');
+            ], ['ckfinder-assets']);
+
+            $this->publishes([
+                __DIR__.'/../views/setup.blade.php' => resource_path('views/vendor/ckfinder/setup.blade.php'),
+                __DIR__.'/../views/browser.blade.php' => resource_path('views/vendor/ckfinder/browser.blade.php')
+            ], ['ckfinder-views']);
 
             return;
         }
-
-        $this->loadRoutesFrom(__DIR__.'/routes.php');
-        $this->loadViewsFrom(__DIR__.'/../views', 'ckfinder');
 
         $this->app->bind('ckfinder.connector', function() {
             if (!class_exists('\CKSource\CKFinder\CKFinder')) {
@@ -47,8 +57,8 @@ class CKFinderServiceProvider extends ServiceProvider
 
             $ckfinder = new \CKSource\CKFinder\CKFinder($ckfinderConfig);
 
-            if (Kernel::MAJOR_VERSION >= 4) {
-                $this->setupForV4PlusKernel($ckfinder);
+            if (Kernel::MAJOR_VERSION === 4) {
+                $this->setupForV4Kernel($ckfinder);
             }
 
             return $ckfinder;
@@ -60,7 +70,7 @@ class CKFinderServiceProvider extends ServiceProvider
      *
      * @param \CKSource\CKFinder\CKFinder $ckfinder
      */
-    protected function setupForV4PlusKernel($ckfinder)
+    protected function setupForV4Kernel($ckfinder)
     {
         $ckfinder['resolver'] = function () use ($ckfinder) {
             $commandResolver = new \CKSource\CKFinderBridge\Polyfill\CommandResolver($ckfinder);
